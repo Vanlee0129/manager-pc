@@ -1,0 +1,24 @@
+.dashboard {
+    padding: 24px;
+  
+    h1 {
+      margin-bottom: 24px;
+    }
+  }
+  
+  .dashboard-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .dashboard-stat-card {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  @media (max-width: 576px) {
+    .dashboard-stat-card {
+      min-width: 100%;
+    }
+  }
