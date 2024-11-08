@@ -1,53 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Table, Button, Modal, Form, Input, Spin } from "antd";
+import { useState, useEffect } from "react";
+import { Table, Button, Modal, Form, Input, Spin, PaginationProps } from "antd";
 import "./MerchantList.less";
 import { ReloadOutlined } from "@ant-design/icons";
-
-// 模拟商户数据，实际应用中应从API获取
-const merchants = [
-  {
-    id: 1,
-    name: "商户A",
-    address: "北京市朝阳区",
-    contactPerson: "张三",
-    phone: "13800138000",
-  },
-  {
-    id: 2,
-    name: "商户B",
-    address: "上海市浦东新区",
-    contactPerson: "李四",
-    phone: "13900139000",
-  },
-  {
-    id: 3,
-    name: "商户C",
-    address: "广州市天河区",
-    contactPerson: "王五",
-    phone: "13700137000",
-  },
-  {
-    id: 4,
-    name: "商户D",
-    address: "深圳市南山区",
-    contactPerson: "赵六",
-    phone: "13600136000",
-  },
-  {
-    id: 5,
-    name: "商户E",
-    address: "成都市武侯区",
-    contactPerson: "孙七",
-    phone: "13500135000",
-  },
-  {
-    id: 6,
-    name: "商户F",
-    address: "杭州市拱墅区",
-    contactPerson: "周八",
-    phone: "13400134000",
-  },
-];
+import { getMerchantList, createMerchant } from "@/services/merchant";
+import { useRequest } from "ahooks";
 
 interface Merchant {
   id: number;
@@ -62,6 +18,10 @@ const MerchantList = () => {
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const { runAsync: createMerchantRequest, loading: createMerchantRequestLoading } = useRequest(createMerchant, {
+    manual: true,
+  });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const columns = [
     {
@@ -86,14 +46,11 @@ const MerchantList = () => {
     },
   ];
 
-  // 模拟API调用
-  const fetchMerchants = () => {
+  const fetchMerchants = async () => {
     setLoading(true);
-    // 模拟API延迟
-    setTimeout(() => {
-      setDataSource(merchants);
-      setLoading(false);
-    }, 1000);
+    const merchantsData = await getMerchantList();
+    setDataSource(merchantsData.merchants);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -114,18 +71,34 @@ const MerchantList = () => {
   };
 
   const handleOk = () => {
-    form.validateFields().then((values) => {
+    form.validateFields().then(async (values) => {
       const newMerchant = {
         id: dataSource.length + 1,
         ...values,
       };
-      setDataSource((prevDataSource: Merchant[]) => [
-        ...prevDataSource,
-        newMerchant,
-      ]);
+      const res = await createMerchantRequest(newMerchant);
+      // 如果请求成功，刷新商户列表, 并且弹窗展示商户的用户名和密码
+      if (res) {
+        Modal.success({
+          title: "商户添加成功",
+          content: (
+            <div>
+              <p>商户帐号: {res.credentials.username}</p>
+              <p>商户密码: {res.credentials.password}</p>
+            </div>
+          ),
+        });
+      }
+      setCurrentPage(1);
+      handleRefresh();
       setIsModalVisible(false);
       form.resetFields();
     });
+  };
+
+  const onPageChange: PaginationProps['onChange'] = (page) => {
+    console.log(page);
+    setCurrentPage(page);
   };
 
   return (
@@ -149,15 +122,16 @@ const MerchantList = () => {
           columns={columns}
           dataSource={dataSource}
           rowKey="id"
-          pagination={{ pageSize: 5 }}
+          pagination={{ pageSize: 5, current: currentPage, onChange: onPageChange }}
         />
       </Spin>
 
       <Modal
         title="添加商户"
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
+        okButtonProps={{ loading: createMerchantRequestLoading }}
       >
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="商户名称" rules={[{ required: true }]}>

@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.5.1",
+    "@umijs/plugins": "^4.3.30",
+    "ahooks": "^3.8.1",
     "antd": "^5.21.3",
     "recharts": "^2.13.0",
     "umi": "^4.3.25"

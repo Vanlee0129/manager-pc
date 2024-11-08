@@ -14,4 +14,8 @@ export default defineConfig({
     { path: "*", redirect: "/" },
   ],
   npmClient: 'yarn',
+  plugins: [
+    '@umijs/plugins/dist/model'
+  ],
+  model: {}
 });

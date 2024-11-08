@@ -146,7 +146,7 @@ const WorkerList: React.FC = () => {
       </Space>
       <Modal
         title="添加人员"
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
       >

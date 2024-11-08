@@ -1,21 +1,39 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Outlet, useNavigate } from "umi";
 import { Layout, Typography, Button, Space } from "antd";
 import Sidebar from "@/components/Sidebar";
+import { logout } from "@/services/login";
+import { useModel } from "umi";
 
 const App: React.FC = () => {
   const { Header, Content } = Layout;
   const { Title } = Typography;
   const navigate = useNavigate();
-
+  const { setUser, user } = useModel('userModel');
+  console.log(user);
   // 假设我们有一个获取用户信息的函数
-  const userInfo = { name: "John Doe" }; // 这里应该替换为实际的用户信息获取逻辑
+  const userInfo = { name: user?.username }; // 这里应该替换为实际的用户信息获取逻辑
 
-  const handleLogout = () => {
+  const clearUserSession = async () => {
+    // 清除用户
+    await logout();
+    sessionStorage.removeItem('token');
+    setUser(undefined);
+  };
+
+  const handleLogout = async () => {
     // 实现退出登录逻辑
     // 例如: clearUserSession();
+    await clearUserSession();
     navigate('/login');
   };
+
+  useEffect(() => {
+    // 检查用户是否已登录
+    if (!sessionStorage.getItem('token')) {
+      navigate('/login');
+    }
+  }, []);
 
   return (
     <Layout>
